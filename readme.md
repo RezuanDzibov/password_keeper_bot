@@ -1,5 +1,4 @@
 <h2>Hello. This telegram bot is password keeper. I wrote this bot with aiogarm and SQLAlchemy ORM.</h2>
-<hr>
 <h3>To start this bot. 
 <h3>You must create .env file and write into the file API_TOKEN(your bot api token) and OWNER_ID(your telegram account id).</h3>
 API_TOKEN = your bot api token
