@@ -13,6 +13,7 @@ python -m venv venv_name
 venv_name\Scripts\activate.bat(windows)
 <br>
 source venv_name/bin/activate(linux-based-systems)
+<br>
 pip install -r requirements.txt
 <h3>So now you can run the bot.</h3>
 python setup.py
