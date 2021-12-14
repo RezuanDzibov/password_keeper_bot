@@ -8,10 +8,11 @@ API_TOKEN = your bot api token
 <br>
 OWNER_ID = your telegram account id
 <h3>Create a virtual environment and install the requirements from the requirements.txt file.</h3>
-python venv venv_name
+python -m venv venv_name
 <br>
 venv_name\Scripts\activate.bat(windows)
 <br>
 source venv_name/bin/activate(linux-based-systems)
+pip install -r requirements.txt
 <h3>So now you can run the bot.</h3>
 python setup.py
