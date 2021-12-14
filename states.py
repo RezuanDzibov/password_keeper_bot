@@ -15,5 +15,5 @@ class AddRowState(StatesGroup):
     row_id = State()
 
 
-class DeleteRowState(AddRowState):
-    pass
+class DeleteRowState(StatesGroup):
+    row_id = State()
