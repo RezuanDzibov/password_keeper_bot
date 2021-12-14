@@ -22,8 +22,8 @@ class LoginCredential(BaseModel):
         return f'{self.__class__.__name__} {self.site_name}'
 
 
-
 BaseModel.metadata.create_all(engine)
+
 
 Session = sessionmaker()
 Session.configure(bind=engine)
