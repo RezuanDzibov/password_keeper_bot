@@ -1,11 +1,10 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext, filters
-from aiogram.types.message import ParseMode
-from db import Database
-import states
 from bot import dp, bot, OWNER_ID
-import aiogram.utils.markdown as md
-from utils import return_formatted_rows
+from aiogram.utils import markdown as md
+import states
+from db import Database
+from utils import return_grouped_rows
 
 
 db = Database()
@@ -13,8 +12,8 @@ db = Database()
 
 @dp.message_handler(commands='start', state=None)
 async def start(message: types.Message):
-    if message['from']['id'] != OWNER_ID:
-        return await message.reply('Access denied.')
+    if message.from_user.id != OWNER_ID:
+        return await bot.send_message(message.chat.id, 'Access denied.')
     await states.StartState.choice.set()
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True, one_time_keyboard=True)
     markup.add('Show rows', 'Show row', 'Add row', 'Delete row')
@@ -24,42 +23,42 @@ async def start(message: types.Message):
 @dp.message_handler(filters.Text(contains='Show rows'), state=states.StartState.choice)
 async def get_rows(message: types.Message, state: FSMContext):
     site_names = db.get_site_names()
-    rows = await return_formatted_rows(site_names)
-    if rows is not None:
+    rows = await return_grouped_rows(site_names)
+    if rows:
         await message.answer(rows)
         await state.finish()
     else:
         await state.finish()
-        await message.reply("You don't have any rows.")
+        await message.reply("You don't have any rows in database.")
 
 
 @dp.message_handler(filters.Text(contains='Show row'), state=states.StartState)
 async def get_row_id(message: types.Message):
-    rows = await return_formatted_rows(db.get_site_names())
-    if rows is not None:
+    rows = await return_grouped_rows(db.get_site_names())
+    if rows:
         await message.answer(rows)
-        await states.AddRowState.site_id.set()
-        await message.reply('Input number of service.')
+        await states.AddRowState.row_id.set()
+        await message.reply('Input row id.')
     else:
-        await message.reply("You don't have any rows.")
+        await message.reply("You don't have any rows in database.")
 
 
-@dp.message_handler(state=states.AddRowState.site_id)
+@dp.message_handler(state=states.AddRowState.row_id)
 async def get_row(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['site_id'] = message.text
-        row = db.get_row(data['site_id'])
+        data['row_id'] = message.text
+        row = db.get_row(data['row_id'])
         await bot.send_message(
             message.chat.id,
             md.text(
+                md.text('Row id: ', data['row_id']),
                 md.text('Site name: ', row.site_name),
                 md.text('Account login :', row.account_login),
                 md.text('Account password:', row.account_password),
                 sep='\n',
             ),
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=types.ParseMode.MARKDOWN,
         )
-
         await state.finish()
 
 
@@ -70,10 +69,9 @@ async def add_row(message: types.Message):
 
 
 @dp.message_handler(state=states.LoginCredentialsState.site_name)
-async def load_account_name(message: types.Message, state: FSMContext):
+async def load_site_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['site_name'] = message.text
-        await bot.send_message(message.chat.id, f"{data.get('site_name')}")
         await states.LoginCredentialsState.next()
         await message.reply('Input account login.')
 
@@ -82,7 +80,6 @@ async def load_account_name(message: types.Message, state: FSMContext):
 async def load_account_login(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['account_login'] = message.text
-        await bot.send_message(message.chat.id, f"{data.get('account_login')}")
         await states.LoginCredentialsState.next()
         await message.reply('Input account password.')
 
@@ -104,26 +101,26 @@ async def load_account_password(message: types.Message, state: FSMContext):
                 md.text('Account password: ', data.get('account_password')),
                 sep='\n',
             ),
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=types.ParseMode.MARKDOWN,
         )
     await state.finish()
 
 
 @dp.message_handler(filters.Text(contains='Delete row'), state=states.StartState)
 async def get_row_id_for_delete(message: types.Message):
-    rows = await return_formatted_rows(db.get_site_names())
-    if rows is not None:
+    rows = await return_grouped_rows(db.get_site_names())
+    if rows:
         await message.answer(rows)
-        await states.DeleteRowState.site_id.set()
-        await message.reply('Input number of site.')
+        await states.DeleteRowState.row_id.set()
+        await message.reply('Input row id.')
     else:
-        await message.reply("You don't have any rows in your database.")
+        await message.reply("You don't have any rows in database.")
 
 
-@dp.message_handler(state=states.DeleteRowState.site_id)
+@dp.message_handler(state=states.DeleteRowState.row_id)
 async def delete_row(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['site_id'] = message.text
-        db.delete_row(data.get('site_id'))
-        await bot.send_message(message.chat.id, f"Row with id {data.get('site_id')} has been deleted.")
+        data['row_id'] = message.text
+        db.delete_row(data.get('row_id'))
+        await bot.send_message(message.chat.id, f"Row with id {data.get('row_id')} has just been deleted.")
         await state.finish()

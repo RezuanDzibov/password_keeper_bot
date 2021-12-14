@@ -1,5 +1,5 @@
-from models import engine, LoginCredential, session
 from sqlalchemy import select, delete
+from models import LoginCredential, session
 
 
 class Database:

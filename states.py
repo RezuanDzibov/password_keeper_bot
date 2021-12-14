@@ -12,7 +12,7 @@ class StartState(StatesGroup):
 
 
 class AddRowState(StatesGroup):
-    site_id = State()
+    row_id = State()
 
 
 class DeleteRowState(AddRowState):
